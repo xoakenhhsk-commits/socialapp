@@ -13,10 +13,19 @@ function App() {
   const [user, setUser] = useState(null);
   const [dbUser, setDbUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
 
   useEffect(() => {
     let unsubscribeDbUser = null;
+
+    // Timeout to prevent infinite loading
+    const loadingTimeout = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+        setError("Kết nối quá chậm. Vui lòng kiểm tra mạng hoặc cấu hình Firebase.");
+      }
+    }, 10000);
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -25,8 +34,7 @@ function App() {
         try {
           const userRef = doc(db, 'users', currentUser.uid);
           
-          // Setup real-time listener for the user document
-          unsubscribeDbUser = onSnapshot(userRef, async (userSnap) => {
+          unsubscribeDbUser = onSnapshot(userRef, (userSnap) => {
             if (!userSnap.exists()) {
               const newDbUser = {
                 uid: currentUser.uid,
@@ -37,21 +45,30 @@ function App() {
                 friendRequestsReceived: [],
                 friendRequestsSent: []
               };
-              await setDoc(userRef, newDbUser);
+              setDoc(userRef, newDbUser).catch(err => {
+                console.error("Error creating user:", err);
+                setError("Không thể tạo profile người dùng.");
+              });
               setDbUser(newDbUser);
             } else {
               setDbUser(userSnap.data());
             }
+            clearTimeout(loadingTimeout);
+            setLoading(false);
+          }, (err) => {
+            console.error("Firestore snapshot error:", err);
+            setError("Lỗi đồng bộ dữ liệu: " + err.message);
             setLoading(false);
           });
         } catch (error) {
-          console.error("Error fetching/syncing user data from Firestore:", error);
-          alert("Lỗi kết nối database: " + error.message);
+          console.error("Auth process error:", error);
+          setError("Lỗi đăng nhập: " + error.message);
           setLoading(false);
         }
       } else {
         if (unsubscribeDbUser) unsubscribeDbUser();
         setDbUser(null);
+        clearTimeout(loadingTimeout);
         setLoading(false);
       }
     });
@@ -59,14 +76,32 @@ function App() {
     return () => {
       unsubscribeAuth();
       if (unsubscribeDbUser) unsubscribeDbUser();
+      clearTimeout(loadingTimeout);
     };
   }, []);
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Loading Social App...</p>
+      <div className="loading-screen">
+        <div className="glass-card loading-card">
+          <div className="spinner-orbit">
+            <div className="orbit-dot"></div>
+          </div>
+          <h2>Social App</h2>
+          <p>Đang chuẩn bị không gian cho bạn...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !user) {
+    return (
+      <div className="loading-screen">
+        <div className="glass-card error-card">
+          <h2>Oops! Đã có lỗi</h2>
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()} className="glass-btn primary">Thử lại</button>
+        </div>
       </div>
     );
   }
