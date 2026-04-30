@@ -144,7 +144,7 @@ export default function Post({ post, currentUser, dbUser }) {
             post.mediaUrl.includes('dailymotion.com') ? (
               <div className="video-embed-wrapper" style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px' }}>
                 <iframe
-                  src={post.mediaUrl}
+                  src={`${post.mediaUrl}${post.mediaUrl.includes('?') ? '&' : '?'}queue-enable=0&queue-autoplay-next=0&sharing-enable=0&ui-logo=0&ui-start-screen-info=0`}
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
                   allow="autoplay; fullscreen; picture-in-picture"
                   allowFullScreen
