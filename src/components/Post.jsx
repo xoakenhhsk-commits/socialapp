@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Heart, MessageCircle, Share2, UserPlus, UserCheck, Globe, Users, Lock } from 'lucide-react';
+import { Heart, MessageCircle, Share2, UserPlus, UserCheck, Globe, Users, Lock, X, Download } from 'lucide-react';
 import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export default function Post({ post, currentUser, dbUser }) {
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState('');
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   const isLiked = post.likes?.includes(currentUser.uid);
   const isMyPost = post.authorId === currentUser.uid;
@@ -77,6 +78,27 @@ export default function Post({ post, currentUser, dbUser }) {
     }
   };
 
+  const handleDownloadImage = async (e) => {
+    e.stopPropagation();
+    try {
+      // Fetch the image as a Blob to force download instead of opening in a new tab
+      const response = await fetch(post.mediaUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `social-app-image-${post.id}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      alert('Không thể tải ảnh xuống. Vui lòng thử lại.');
+    }
+  };
+
   const formattedTime = post.createdAt?.toDate ? 
     new Intl.DateTimeFormat('vi-VN', { 
       month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' 
@@ -117,12 +139,28 @@ export default function Post({ post, currentUser, dbUser }) {
       </div>
 
       {post.mediaUrl && (
-        <div className="post-media">
+        <div className="post-media" onClick={() => post.mediaType !== 'video' && setIsImageModalOpen(true)}>
           {post.mediaType === 'video' ? (
-            <video src={post.mediaUrl} controls className="media-preview" />
+            <video src={post.mediaUrl} controls className="media-preview" onClick={(e) => e.stopPropagation()} />
           ) : (
             <img src={post.mediaUrl} alt="Post Attachment" className="media-preview" />
           )}
+        </div>
+      )}
+
+      {isImageModalOpen && post.mediaType !== 'video' && (
+        <div className="image-modal-overlay" onClick={() => setIsImageModalOpen(false)}>
+          <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="image-modal-actions">
+              <button className="image-modal-btn" onClick={handleDownloadImage} title="Tải xuống">
+                <Download size={20} />
+              </button>
+              <button className="image-modal-btn" onClick={() => setIsImageModalOpen(false)} title="Đóng">
+                <X size={20} />
+              </button>
+            </div>
+            <img src={post.mediaUrl} alt="Fullscreen Attachment" className="image-modal-img" />
+          </div>
         </div>
       )}
 
