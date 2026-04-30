@@ -4,6 +4,7 @@ import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import Login from './components/Login';
 import Feed from './components/Feed';
+import Profile from './components/Profile';
 import Settings from './components/Settings';
 import FindFriends from './components/FindFriends';
 import { Home, Users, Settings as SettingsIcon, LogOut } from 'lucide-react';
@@ -15,6 +16,13 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
+  const [targetProfileId, setTargetProfileId] = useState(null);
+
+  const navigateToProfile = (uid) => {
+    setTargetProfileId(uid);
+    setActiveTab('profile');
+    window.scrollTo(0, 0);
+  };
 
   useEffect(() => {
     let unsubscribeDbUser = null;
@@ -114,28 +122,28 @@ function App() {
       {user && dbUser ? (
         <>
           <nav className="nav-bar glass">
-            <h1 className="nav-logo" onClick={() => setActiveTab('home')} style={{cursor: 'pointer'}}>SocialApp</h1>
+            <h1 className="nav-logo" onClick={() => { setActiveTab('home'); setTargetProfileId(null); }} style={{cursor: 'pointer'}}>SocialApp</h1>
             
             <div className="nav-links">
-              <button className={`nav-btn ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
+              <button className={`nav-btn ${activeTab === 'home' ? 'active' : ''}`} onClick={() => { setActiveTab('home'); setTargetProfileId(null); }}>
                 <Home size={20} />
               </button>
-              <button className={`nav-btn ${activeTab === 'friends' ? 'active' : ''}`} onClick={() => setActiveTab('friends')} style={{position: 'relative'}}>
+              <button className={`nav-btn ${activeTab === 'friends' ? 'active' : ''}`} onClick={() => { setActiveTab('friends'); setTargetProfileId(null); }} style={{position: 'relative'}}>
                 <Users size={20} />
                 {pendingRequestsCount > 0 && (
                   <span className="notification-badge">{pendingRequestsCount}</span>
                 )}
               </button>
-              <button className={`nav-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+              <button className={`nav-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => { setActiveTab('settings'); setTargetProfileId(null); }}>
                 <SettingsIcon size={20} />
               </button>
             </div>
 
             <div className="user-profile">
-              <span className="user-name" style={{fontWeight: 600, cursor: 'pointer'}} onClick={() => setActiveTab('profile')}>
+              <span className="user-name" style={{fontWeight: 600, cursor: 'pointer'}} onClick={() => navigateToProfile(user.uid)}>
                 {user.displayName}
               </span>
-              <img src={user.photoURL} alt="Profile" className="avatar" style={{cursor: 'pointer'}} onClick={() => setActiveTab('profile')}/>
+              <img src={user.photoURL} alt="Profile" className="avatar" style={{cursor: 'pointer'}} onClick={() => navigateToProfile(user.uid)}/>
               <button onClick={() => signOut(auth)} className="glass-btn secondary small-btn">
                 <LogOut size={16} />
               </button>
@@ -143,9 +151,16 @@ function App() {
           </nav>
           
           <main className="main-content">
-            {activeTab === 'home' && <Feed user={user} dbUser={dbUser} />}
-            {activeTab === 'profile' && <Feed user={user} dbUser={dbUser} profileUserId={user.uid} />}
-            {activeTab === 'friends' && <FindFriends user={user} dbUser={dbUser} />}
+            {activeTab === 'home' && <Feed user={user} dbUser={dbUser} onProfileClick={navigateToProfile} />}
+            {activeTab === 'profile' && (
+              <Profile 
+                userId={targetProfileId || user.uid} 
+                currentUser={user} 
+                dbUser={dbUser} 
+                onProfileClick={navigateToProfile}
+              />
+            )}
+            {activeTab === 'friends' && <FindFriends user={user} dbUser={dbUser} onProfileClick={navigateToProfile} />}
             {activeTab === 'settings' && <Settings user={user} dbUser={dbUser} />}
           </main>
         </>

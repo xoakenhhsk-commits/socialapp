@@ -5,7 +5,7 @@ import { db, storage } from '../firebase';
 import Post from './Post';
 import { Image, Video, Globe, Users, Lock, X } from 'lucide-react';
 
-export default function Feed({ user, dbUser, profileUserId }) {
+export default function Feed({ user, dbUser, profileUserId, onProfileClick }) {
   const [posts, setPosts] = useState([]);
   const [newPostContent, setNewPostContent] = useState('');
   const [privacy, setPrivacy] = useState('public');
@@ -268,7 +268,13 @@ export default function Feed({ user, dbUser, profileUserId }) {
 
       <div className="posts-list">
         {posts.map(post => (
-          <Post key={post.id} post={post} currentUser={user} dbUser={dbUser} />
+          <Post 
+            key={post.id} 
+            post={post} 
+            currentUser={user} 
+            dbUser={dbUser} 
+            onProfileClick={onProfileClick}
+          />
         ))}
         {posts.length === 0 && (
           <div className="empty-state">

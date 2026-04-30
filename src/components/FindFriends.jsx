@@ -96,8 +96,19 @@ export default function FindFriends({ user, dbUser }) {
           <div className="users-grid">
             {pendingRequestUsers.map(otherUser => (
               <div key={otherUser.uid} className="user-card glass-panel" style={{ border: '2px solid rgba(129, 140, 248, 0.3)' }}>
-                <img src={otherUser.photoURL || "https://via.placeholder.com/60"} alt={otherUser.displayName} className="avatar-large" />
-                <h3>{otherUser.displayName}</h3>
+                <img 
+                  src={otherUser.photoURL || "https://via.placeholder.com/60"} 
+                  alt={otherUser.displayName} 
+                  className="avatar-large" 
+                  style={{cursor: 'pointer'}} 
+                  onClick={() => onProfileClick && onProfileClick(otherUser.uid)}
+                />
+                <h3 
+                  style={{cursor: 'pointer'}} 
+                  onClick={() => onProfileClick && onProfileClick(otherUser.uid)}
+                >
+                  {otherUser.displayName}
+                </h3>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                   <button className="glass-btn" style={{ background: 'rgba(74, 222, 128, 0.2)' }} onClick={() => handleAcceptRequest(otherUser.uid)}>
                     <Check size={18} /> Nhận
@@ -136,8 +147,19 @@ export default function FindFriends({ user, dbUser }) {
             
             return (
               <div key={otherUser.uid} className="user-card glass-panel">
-                <img src={otherUser.photoURL || "https://via.placeholder.com/60"} alt={otherUser.displayName} className="avatar-large" />
-                <h3>{otherUser.displayName}</h3>
+                <img 
+                  src={otherUser.photoURL || "https://via.placeholder.com/60"} 
+                  alt={otherUser.displayName} 
+                  className="avatar-large" 
+                  style={{cursor: 'pointer'}} 
+                  onClick={() => onProfileClick && onProfileClick(otherUser.uid)}
+                />
+                <h3 
+                  style={{cursor: 'pointer'}} 
+                  onClick={() => onProfileClick && onProfileClick(otherUser.uid)}
+                >
+                  {otherUser.displayName}
+                </h3>
                 
                 {isFriend ? (
                   <button className="glass-btn secondary" disabled>

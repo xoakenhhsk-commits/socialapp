@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Heart, MessageCircle, Share2, UserPlus, UserCheck, Globe, Users, Lock, X, Download } from 'lucide-react';
-import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { Heart, MessageCircle, Share2, UserPlus, UserCheck, Globe, Users, Lock, X, Download, MoreVertical, Trash2 } from 'lucide-react';
+import { doc, updateDoc, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
-export default function Post({ post, currentUser, dbUser }) {
+export default function Post({ post, currentUser, dbUser, onProfileClick }) {
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
 
   const isLiked = post.likes?.includes(currentUser.uid);
   const isMyPost = post.authorId === currentUser.uid;
@@ -23,6 +24,29 @@ export default function Post({ post, currentUser, dbUser }) {
       }
     } catch (error) {
       console.error("Error toggling like:", error);
+    }
+  };
+
+  const handleDeletePost = async () => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa bài viết này không?")) return;
+    try {
+      await deleteDoc(doc(db, 'posts', post.id));
+      setShowOptionsMenu(false);
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      alert("Lỗi khi xóa bài viết.");
+    }
+  };
+
+  const handleUpdatePrivacy = async (newPrivacy) => {
+    try {
+      await updateDoc(doc(db, 'posts', post.id), {
+        privacy: newPrivacy
+      });
+      setShowOptionsMenu(false);
+    } catch (error) {
+      console.error("Error updating privacy:", error);
+      alert("Lỗi khi cập nhật quyền riêng tư.");
     }
   };
 
@@ -81,7 +105,6 @@ export default function Post({ post, currentUser, dbUser }) {
   const handleDownloadImage = async (e) => {
     e.stopPropagation();
     try {
-      // Fetch the image as a Blob to force download instead of opening in a new tab
       const response = await fetch(post.mediaUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -104,21 +127,30 @@ export default function Post({ post, currentUser, dbUser }) {
       month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' 
     }).format(post.createdAt.toDate()) : 'Vừa xong';
 
-  const PrivacyIcon = () => {
-    if (post.privacy === 'public') return <Globe size={14} />;
-    if (post.privacy === 'friends') return <Users size={14} />;
-    if (post.privacy === 'private') return <Lock size={14} />;
+  const PrivacyIcon = ({ privacy }) => {
+    const p = privacy || post.privacy;
+    if (p === 'public') return <Globe size={14} />;
+    if (p === 'friends') return <Users size={14} />;
+    if (p === 'private') return <Lock size={14} />;
     return <Globe size={14} />;
   };
 
   return (
     <div className="post-card glass">
-      <div className="post-header" style={{ justifyContent: 'space-between' }}>
+      <div className="post-header" style={{ justifyContent: 'space-between', position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img src={post.authorPhoto || "https://via.placeholder.com/40"} alt={post.authorName} className="avatar" />
+          <img 
+            src={post.authorPhoto || "https://via.placeholder.com/40"} 
+            alt={post.authorName} 
+            className="avatar" 
+            style={{cursor: 'pointer'}} 
+            onClick={() => onProfileClick && onProfileClick(post.authorId)}
+          />
           <div>
             <h3 className="post-author" style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-              {post.authorName}
+              <span style={{cursor: 'pointer'}} onClick={() => onProfileClick && onProfileClick(post.authorId)}>
+                {post.authorName}
+              </span>
               {!isMyPost && (
                 isFriend ? 
                   <span className="friend-badge"><UserCheck size={14}/> Bạn bè</span> :
@@ -132,6 +164,35 @@ export default function Post({ post, currentUser, dbUser }) {
             </p>
           </div>
         </div>
+
+        {isMyPost && (
+          <div className="post-options-container">
+            <button className="post-options-btn" onClick={() => setShowOptionsMenu(!showOptionsMenu)}>
+              <MoreVertical size={20} />
+            </button>
+            
+            {showOptionsMenu && (
+              <div className="post-options-menu glass shadow-lg">
+                <div className="menu-section">
+                  <p className="menu-label">Chế độ hiển thị</p>
+                  <button onClick={() => handleUpdatePrivacy('public')} className={post.privacy === 'public' ? 'active' : ''}>
+                    <Globe size={16} /> Công khai
+                  </button>
+                  <button onClick={() => handleUpdatePrivacy('friends')} className={post.privacy === 'friends' ? 'active' : ''}>
+                    <Users size={16} /> Bạn bè
+                  </button>
+                  <button onClick={() => handleUpdatePrivacy('private')} className={post.privacy === 'private' ? 'active' : ''}>
+                    <Lock size={16} /> Chỉ mình tôi
+                  </button>
+                </div>
+                <div className="menu-divider"></div>
+                <button onClick={handleDeletePost} className="delete-btn">
+                  <Trash2 size={16} /> Xóa bài viết
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
       <div className="post-content">
