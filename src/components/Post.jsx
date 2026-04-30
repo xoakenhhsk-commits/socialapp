@@ -141,22 +141,7 @@ export default function Post({ post, currentUser, dbUser }) {
       {post.mediaUrl && (
         <div className="post-media" onClick={() => post.mediaType !== 'video' && setIsImageModalOpen(true)}>
           {post.mediaType === 'video' ? (
-            post.mediaUrl.includes('dailymotion.com/embed') ? (
-              <div className="video-embed-wrapper">
-                <iframe
-                  src={post.mediaUrl}
-                  width="100%"
-                  height="100%"
-                  frameBorder="0"
-                  allow="autoplay; fullscreen; picture-in-picture; web-share"
-                  allowFullScreen
-                  title="Dailymotion Video"
-                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: '12px' }}
-                />
-              </div>
-            ) : (
-              <video src={post.mediaUrl} controls className="media-preview" onClick={(e) => e.stopPropagation()} />
-            )
+            <video src={post.mediaUrl} controls className="media-preview" style={{width: '100%', borderRadius: '12px'}} onClick={(e) => e.stopPropagation()} />
           ) : (
             <img src={post.mediaUrl} alt="Post Attachment" className="media-preview" />
           )}

@@ -96,82 +96,39 @@ export default function Feed({ user, dbUser, profileUserId }) {
           }
 
         } else if (mediaFile.type.startsWith('video/')) {
-          // ========== VIDEO UPLOAD via Dailymotion ==========
+          // ========== VIDEO UPLOAD via Firebase Storage ==========
           mediaType = 'video';
 
-          // Check video file size (Dailymotion max ~2GB, but we limit to 100MB for UX)
-          const maxSizeMB = 100;
+          // Check video file size (limit to 50MB for free tier)
+          const maxSizeMB = 50;
           if (mediaFile.size > maxSizeMB * 1024 * 1024) {
             alert(`Video quá lớn! Kích thước tối đa cho phép là ${maxSizeMB}MB.`);
             setIsUploading(false);
             return;
           }
 
-          // Step 1: Get Dailymotion token + upload URL from our API
-          setUploadProgress(5);
-          const tokenRes = await fetch('/api/dailymotion-token', { method: 'POST' });
-          const tokenData = await tokenRes.json();
+          // Upload to Firebase Storage with progress tracking
+          const fileName = `videos/${user.uid}/${Date.now()}_${mediaFile.name}`;
+          const storageRef = ref(storage, fileName);
+          
+          mediaUrl = await new Promise((resolve, reject) => {
+            const uploadTask = uploadBytesResumable(storageRef, mediaFile);
 
-          if (!tokenData.upload_url) {
-            throw new Error(tokenData.error || tokenData.details || 'Không thể kết nối Dailymotion. Kiểm tra cấu hình API.');
-          }
-
-          // Step 2: Upload video file directly to Dailymotion's upload URL
-          setUploadProgress(15);
-          const uploadForm = new FormData();
-          uploadForm.append('file', mediaFile);
-
-          // Use XMLHttpRequest to track real upload progress
-          const uploadData = await new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', tokenData.upload_url);
-
-            xhr.upload.onprogress = (event) => {
-              if (event.lengthComputable) {
-                const percent = Math.round(15 + (event.loaded / event.total) * 60);
-                setUploadProgress(percent);
+            uploadTask.on('state_changed',
+              (snapshot) => {
+                const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                setUploadProgress(progress);
+              },
+              (error) => {
+                console.error('Video upload error:', error);
+                reject(new Error('Không thể tải video lên. Vui lòng thử lại.'));
+              },
+              async () => {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                resolve(downloadURL);
               }
-            };
-
-            xhr.onload = () => {
-              try {
-                const data = JSON.parse(xhr.responseText);
-                resolve(data);
-              } catch {
-                reject(new Error('Invalid response from Dailymotion upload'));
-              }
-            };
-
-            xhr.onerror = () => reject(new Error('Upload failed - network error'));
-            xhr.ontimeout = () => reject(new Error('Upload timed out'));
-            xhr.timeout = 300000; // 5 minutes
-
-            xhr.send(uploadForm);
+            );
           });
-
-          if (!uploadData.url) {
-            throw new Error('Dailymotion upload did not return a valid URL');
-          }
-
-          // Step 3: Publish the video on Dailymotion
-          setUploadProgress(80);
-          const publishRes = await fetch('/api/dailymotion-publish', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              access_token: tokenData.access_token,
-              uploaded_url: uploadData.url,
-              title: newPostContent || `Video - ${new Date().toLocaleDateString('vi-VN')}`
-            })
-          });
-          const publishData = await publishRes.json();
-
-          if (publishData.id) {
-            mediaUrl = `https://www.dailymotion.com/embed/video/${publishData.id}`;
-            setUploadProgress(100);
-          } else {
-            throw new Error(publishData.error || publishData.details || 'Failed to publish video');
-          }
         }
       }
 
