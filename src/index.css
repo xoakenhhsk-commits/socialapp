@@ -7,7 +7,7 @@
   color: rgba(255, 255, 255, 0.87);
   background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
   background-attachment: fixed;
-  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -17,7 +17,13 @@ body {
   margin: 0;
   display: flex;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100dvh;
+  /* Fix iOS dynamic viewport height issue */
+  min-height: -webkit-fill-available;
+}
+
+html {
+  height: -webkit-fill-available;
 }
 
 #root {
@@ -28,6 +34,7 @@ body {
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent; /* Remove blue tap highlight on iOS */
 }
 
 /* Glassmorphism Classes */
@@ -520,11 +527,12 @@ body {
 @media (max-width: 600px) {
   .app-container {
     padding: 10px;
-    padding-bottom: 80px; /* Space for bottom nav */
+    padding-top: calc(10px + env(safe-area-inset-top));
+    padding-bottom: calc(80px + env(safe-area-inset-bottom)); /* Space for bottom nav + iPhone Home Indicator */
   }
   
   .nav-bar {
-    padding: 10px 16px;
+    padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
     margin-bottom: 16px;
     top: 0;
   }
@@ -546,7 +554,8 @@ body {
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 12px 24px;
+    /* Safe Area Inset cho iPhone có Home Indicator */
+    padding: 12px 24px calc(12px + env(safe-area-inset-bottom));
     justify-content: space-around;
     z-index: 1000;
     margin: 0;
@@ -608,7 +617,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100dvh;
   padding: 24px;
 }
 
@@ -650,7 +659,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100dvh;
   gap: 16px;
 }
 
