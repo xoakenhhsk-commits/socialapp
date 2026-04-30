@@ -122,29 +122,36 @@ function App() {
       {user && dbUser ? (
         <>
           <nav className="nav-bar glass">
-            <h1 className="nav-logo" onClick={() => { setActiveTab('home'); setTargetProfileId(null); }} style={{cursor: 'pointer'}}>SocialApp</h1>
+            <h1 className="nav-logo desktop-only" onClick={() => { setActiveTab('home'); setTargetProfileId(null); }} style={{cursor: 'pointer'}}>SocialApp</h1>
             
             <div className="nav-links">
               <button className={`nav-btn ${activeTab === 'home' ? 'active' : ''}`} onClick={() => { setActiveTab('home'); setTargetProfileId(null); }}>
-                <Home size={20} />
+                <Home size={24} />
+                <span className="nav-text">Trang chủ</span>
               </button>
               <button className={`nav-btn ${activeTab === 'friends' ? 'active' : ''}`} onClick={() => { setActiveTab('friends'); setTargetProfileId(null); }} style={{position: 'relative'}}>
-                <Users size={20} />
+                <Users size={24} />
                 {pendingRequestsCount > 0 && (
                   <span className="notification-badge">{pendingRequestsCount}</span>
                 )}
+                <span className="nav-text">Bạn bè</span>
+              </button>
+              <button className={`nav-btn ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => navigateToProfile(user.uid)}>
+                <img src={user.photoURL} alt="Profile" className="nav-avatar mobile-only" />
+                <span className="nav-text">Cá nhân</span>
               </button>
               <button className={`nav-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => { setActiveTab('settings'); setTargetProfileId(null); }}>
-                <SettingsIcon size={20} />
+                <SettingsIcon size={24} />
+                <span className="nav-text">Cài đặt</span>
               </button>
             </div>
 
-            <div className="user-profile">
+            <div className="user-profile desktop-only">
               <span className="user-name" style={{fontWeight: 600, cursor: 'pointer'}} onClick={() => navigateToProfile(user.uid)}>
                 {user.displayName}
               </span>
               <img src={user.photoURL} alt="Profile" className="avatar" style={{cursor: 'pointer'}} onClick={() => navigateToProfile(user.uid)}/>
-              <button onClick={() => signOut(auth)} className="glass-btn secondary small-btn">
+              <button onClick={() => signOut(auth)} className="glass-btn secondary small-btn logout-btn">
                 <LogOut size={16} />
               </button>
             </div>
