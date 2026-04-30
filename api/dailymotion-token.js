@@ -1,43 +1,36 @@
-// Vercel Serverless Function: Get Dailymotion access token + upload URL
-// This keeps API secrets safe on the server side
+// Vercel Serverless Function: Get Dailymotion access token using refresh_token
+// No username/password needed - uses OAuth refresh token
 
 export default async function handler(req, res) {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const {
     DAILYMOTION_API_KEY,
     DAILYMOTION_API_SECRET,
-    DAILYMOTION_USERNAME,
-    DAILYMOTION_PASSWORD
+    DAILYMOTION_REFRESH_TOKEN
   } = process.env;
 
-  if (!DAILYMOTION_API_KEY || !DAILYMOTION_API_SECRET) {
-    return res.status(500).json({ error: 'Dailymotion credentials not configured on server.' });
+  if (!DAILYMOTION_API_KEY || !DAILYMOTION_API_SECRET || !DAILYMOTION_REFRESH_TOKEN) {
+    return res.status(500).json({ 
+      error: 'Dailymotion chưa được cấu hình. Truy cập /api/dailymotion-auth để thiết lập.' 
+    });
   }
 
   try {
-    // Step 1: Get access token using Resource Owner Password Grant
+    // Get access token using refresh_token (no password needed!)
     const tokenResponse = await fetch('https://api.dailymotion.com/oauth/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        grant_type: 'password',
+        grant_type: 'refresh_token',
         client_id: DAILYMOTION_API_KEY,
         client_secret: DAILYMOTION_API_SECRET,
-        username: DAILYMOTION_USERNAME,
-        password: DAILYMOTION_PASSWORD,
-        scope: 'manage_videos'
+        refresh_token: DAILYMOTION_REFRESH_TOKEN
       }).toString()
     });
 
@@ -46,25 +39,24 @@ export default async function handler(req, res) {
     if (!tokenData.access_token) {
       console.error('Dailymotion token error:', tokenData);
       return res.status(400).json({ 
-        error: 'Failed to get Dailymotion access token', 
-        details: tokenData.error_description || tokenData.error || 'Unknown error'
+        error: 'Không thể lấy access token. Có thể cần xác thực lại tại /api/dailymotion-auth',
+        details: tokenData.error_description || tokenData.error
       });
     }
 
-    // Step 2: Get upload URL
+    // Get upload URL
     const uploadResponse = await fetch(
       `https://api.dailymotion.com/file/upload?access_token=${tokenData.access_token}`
     );
     const uploadData = await uploadResponse.json();
 
     if (!uploadData.upload_url) {
-      return res.status(400).json({ error: 'Failed to get upload URL from Dailymotion' });
+      return res.status(400).json({ error: 'Không thể lấy upload URL từ Dailymotion' });
     }
 
     return res.status(200).json({
       access_token: tokenData.access_token,
-      upload_url: uploadData.upload_url,
-      progress_url: uploadData.progress_url
+      upload_url: uploadData.upload_url
     });
   } catch (error) {
     console.error('Dailymotion token error:', error);
