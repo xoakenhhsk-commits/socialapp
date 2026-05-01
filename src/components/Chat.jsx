@@ -6,7 +6,7 @@ import {
 import { db } from '../firebase';
 import { 
   Send, Users, User, Plus, Search, ChevronLeft, 
-  MoreHorizontal, MessageSquare, Check, X 
+  MoreHorizontal, MessageSquare, Check, X, Bell 
 } from 'lucide-react';
 
 export default function Chat({ user, dbUser }) {
@@ -21,6 +21,9 @@ export default function Chat({ user, dbUser }) {
   const [friendsList, setFriendsList] = useState([]);
   const messagesEndRef = useRef(null);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [notificationSound, setNotificationSound] = useState(localStorage.getItem('aura_notif_sound') || 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+  const lastMsgIdRef = useRef(null);
+  const audioRef = useRef(null);
 
   // Fetch conversations
   useEffect(() => {
@@ -61,6 +64,16 @@ export default function Chat({ user, dbUser }) {
         id: doc.id, 
         ...doc.data({ serverTimestamps: 'estimate' }) 
       }));
+      
+      // Notification Sound Logic
+      if (msgs.length > 0) {
+        const lastMsg = msgs[msgs.length - 1];
+        if (lastMsgIdRef.current && lastMsg.id !== lastMsgIdRef.current && lastMsg.senderId !== user.uid) {
+          audioRef.current?.play().catch(e => console.log("Sound play blocked by browser"));
+        }
+        lastMsgIdRef.current = lastMsg.id;
+      }
+
       setMessages(msgs);
       setTimeout(scrollToBottom, 100);
     }, (err) => {
@@ -68,7 +81,7 @@ export default function Chat({ user, dbUser }) {
     });
 
     return () => unsubscribe();
-  }, [activeChat]);
+  }, [activeChat, user.uid]);
 
   // Fetch friends for group creation
   useEffect(() => {
@@ -243,13 +256,33 @@ export default function Chat({ user, dbUser }) {
     return convo.participantDetails?.[otherId]?.photo;
   };
 
+  const handleSoundUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target.result;
+        setNotificationSound(base64);
+        localStorage.setItem('aura_notif_sound', base64);
+        alert("Đã cập nhật nhạc chuông!");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div className="chat-container">
+      <audio ref={audioRef} src={notificationSound} />
+      
       {/* Sidebar */}
       <div className={`chat-sidebar ${isSidebarActive ? 'active' : ''}`}>
         <div className="chat-sidebar-header" style={{ paddingBottom: '12px' }}>
           <h2 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '800' }}>messenger</h2>
           <div style={{ display: 'flex', gap: '8px' }}>
+            <label className="create-group-icon-btn" style={{ cursor: 'pointer' }} title="Cài đặt nhạc chuông">
+              <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={handleSoundUpload} />
+              <Bell size={20} />
+            </label>
             <button className="create-group-icon-btn" onClick={() => setShowCreateGroup(true)}>
               <Plus size={22} />
             </button>
