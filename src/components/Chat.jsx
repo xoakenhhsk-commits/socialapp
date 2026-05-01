@@ -260,7 +260,7 @@ export default function Chat({ user, dbUser }) {
           <>
             <div className="chat-header">
               <button className="glass-btn small-btn" onClick={() => setIsSidebarActive(true)} style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <ChevronLeft size={20} /> <span className="mobile-only">Quay lại</span>
+                <ChevronLeft size={20} /> <span>Quay lại</span>
               </button>
               {activeChat.isGroup ? (
                 <div className="avatar-small" style={{ background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>

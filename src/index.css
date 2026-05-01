@@ -1544,29 +1544,29 @@ body {
 }
 
 .chat-sidebar {
-  width: 320px;
-  border-right: 1px solid var(--border);
-  display: flex;
+  width: 100%;
+  border-right: none;
+  display: none;
   flex-direction: column;
   background: rgba(0, 0, 0, 0.1);
 }
 
-@media (max-width: 768px) {
-  .chat-sidebar {
-    width: 100%;
-    display: none;
-  }
-  .chat-sidebar.active {
-    display: flex;
-  }
-  .chat-main {
-    display: none;
-  }
-  .chat-main.active {
-    display: flex;
-    width: 100%;
-  }
+.chat-sidebar.active {
+  display: flex;
 }
+
+.chat-main {
+  width: 100%;
+  display: none;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.chat-main.active {
+  display: flex;
+}
+
+/* Responsive logic handled by .active class on all screens */
 
 .chat-sidebar-header {
   padding: 20px;
@@ -1626,7 +1626,7 @@ body {
 
 .chat-main {
   flex: 1;
-  display: flex;
+  display: none;
   flex-direction: column;
   background: rgba(0, 0, 0, 0.05);
 }
