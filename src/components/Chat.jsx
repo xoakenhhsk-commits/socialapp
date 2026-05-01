@@ -26,13 +26,20 @@ export default function Chat({ user, dbUser }) {
     if (!user) return;
     const q = query(
       collection(db, 'conversations'),
-      where('participants', 'array-contains', user.uid),
-      orderBy('updatedAt', 'desc')
+      where('participants', 'array-contains', user.uid)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const convos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Sort in-memory to avoid Index requirements
+      convos.sort((a, b) => {
+        const timeA = a.updatedAt?.toMillis?.() || 0;
+        const timeB = b.updatedAt?.toMillis?.() || 0;
+        return timeB - timeA;
+      });
       setConversations(convos);
+    }, (err) => {
+      console.error("Conversations snapshot error:", err);
     });
 
     return () => unsubscribe();
@@ -48,10 +55,15 @@ export default function Chat({ user, dbUser }) {
       limit(100)
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
+      const msgs = snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data({ serverTimestamps: 'estimate' }) 
+      }));
       setMessages(msgs);
       setTimeout(scrollToBottom, 100);
+    }, (err) => {
+      console.error("Messages snapshot error:", err);
     });
 
     return () => unsubscribe();
@@ -78,21 +90,25 @@ export default function Chat({ user, dbUser }) {
     fetchFriends();
   }, [dbUser]);
 
-  // Mark as read when active chat changes
+  // Mark as read when active chat changes OR new messages arrive
   useEffect(() => {
-    if (activeChat && user) {
+    if (activeChat && user && messages.length > 0) {
       const markAsRead = async () => {
         try {
-          await updateDoc(doc(db, 'conversations', activeChat.id), {
-            readBy: arrayUnion(user.uid)
-          });
+          const convoRef = doc(db, 'conversations', activeChat.id);
+          const convoSnap = await getDoc(convoRef);
+          if (convoSnap.exists() && !convoSnap.data().readBy?.includes(user.uid)) {
+            await updateDoc(convoRef, {
+              readBy: arrayUnion(user.uid)
+            });
+          }
         } catch (error) {
           console.error("Error marking as read:", error);
         }
       };
       markAsRead();
     }
-  }, [activeChat, user]);
+  }, [activeChat, user, messages.length]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
