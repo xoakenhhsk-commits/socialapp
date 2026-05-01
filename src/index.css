@@ -1420,6 +1420,12 @@ body {
   margin-bottom: 24px;
 }
 
+.mobile-only { display: none; }
+@media (max-width: 768px) {
+  .mobile-only { display: inline; }
+  .desktop-only { display: none; }
+}
+
 /* =============================================
    MOBILE-SPECIFIC OVERRIDES (< 600px)
    ============================================= */
@@ -1513,11 +1519,20 @@ body {
    ============================================= */
 .chat-container {
   display: flex;
-  height: calc(100vh - 60px);
+  height: calc(100vh - 124px); /* Adjusted for mobile header + nav */
   background: var(--glass);
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid var(--border);
+}
+
+@media (max-width: 900px) {
+  .chat-container {
+    height: calc(100vh - 130px);
+    border-radius: 0;
+    border: none;
+    margin: 0;
+  }
 }
 
 @media (min-width: 901px) {
@@ -1675,12 +1690,13 @@ body {
 }
 
 .chat-input-area {
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-top: 1px solid var(--border);
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   background: var(--glass-heavy);
+  padding-bottom: env(safe-area-inset-bottom, 12px);
 }
 
 .chat-input {
