@@ -107,10 +107,8 @@ function App() {
     return (
       <div className="loading-screen">
         <div className="glass-card loading-card">
-          <div className="spinner-orbit">
-            <div className="orbit-dot"></div>
-          </div>
-          <h2>Social App</h2>
+          <img src="/logo.png" alt="AURANET" style={{ width: '80px', height: '80px', borderRadius: '20px', marginBottom: '16px' }} />
+          <h2>AURANET</h2>
           <p>Đang chuẩn bị không gian cho bạn...</p>
         </div>
       </div>
@@ -139,8 +137,9 @@ function App() {
           {/* Desktop Left Sidebar - Only rendered on desktop */}
           {isDesktop && (
             <aside className="sidebar left-sidebar">
-              <div className="sidebar-header">
-                <h1 className="nav-logo" onClick={() => { setActiveTab('home'); setTargetProfileId(null); }}>SocialApp</h1>
+              <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <img src="/logo.png" alt="" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
+                <h1 className="nav-logo" onClick={() => { setActiveTab('home'); setTargetProfileId(null); }}>AURANET</h1>
               </div>
               <nav className="sidebar-nav">
                 <button className={`side-nav-btn ${activeTab === 'home' ? 'active' : ''}`} onClick={() => { setActiveTab('home'); setTargetProfileId(null); }}>
@@ -170,7 +169,10 @@ function App() {
             {/* Mobile Header - Only rendered on mobile */}
             {!isDesktop && (
               <header className="mobile-header glass">
-                <h1 className="nav-logo">SocialApp</h1>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <img src="/logo.png" alt="" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
+                  <h1 className="nav-logo">AURANET</h1>
+                </div>
                 <div className="mobile-header-actions">
                   <img src={user.photoURL} alt="" className="avatar-small" onClick={() => navigateToProfile(user.uid)} />
                 </div>

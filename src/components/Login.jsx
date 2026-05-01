@@ -15,11 +15,11 @@ export default function Login() {
   return (
     <div className="login-container">
       <div className="login-card glass">
-        <div className="login-icon">
-          <LogIn size={40} color="#818cf8" />
+        <div className="login-icon" style={{ background: 'none' }}>
+          <img src="/logo.png" alt="AURANET" style={{ width: '100%', height: '100%', borderRadius: '24px' }} />
         </div>
-        <h1 className="login-title">Social App</h1>
-        <p className="login-subtitle">Connect with friends and the world around you.</p>
+        <h1 className="login-title">AURANET</h1>
+        <p className="login-subtitle">Connect beyond boundaries. Share your aura.</p>
         <button onClick={handleLogin} className="glass-btn">
           <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
             <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">

@@ -256,7 +256,7 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
             <h3 className="intro-title">Giới thiệu</h3>
             <div className="intro-item">
               <Briefcase size={20} />
-              <span>Làm việc tại <strong>Social App</strong></span>
+              <span>Làm việc tại <strong>AURANET</strong></span>
             </div>
             <div className="intro-item">
               <MapPin size={20} />
