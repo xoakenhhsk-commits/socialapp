@@ -28,6 +28,7 @@ function App() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
   const [targetProfileId, setTargetProfileId] = useState(null);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
   const windowWidth = useWindowWidth();
   const isDesktop = windowWidth > 900;
@@ -38,6 +39,15 @@ function App() {
     setActiveTab('profile');
     window.scrollTo(0, 0);
   };
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     let unsubscribeDbUser = null;
@@ -190,7 +200,7 @@ function App() {
                 />
               )}
               {activeTab === 'friends' && <FindFriends user={user} dbUser={dbUser} onProfileClick={navigateToProfile} />}
-              {activeTab === 'settings' && <Settings user={user} dbUser={dbUser} />}
+              {activeTab === 'settings' && <Settings user={user} dbUser={dbUser} theme={theme} setTheme={setTheme} />}
             </div>
           </main>
 

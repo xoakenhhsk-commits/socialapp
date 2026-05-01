@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { updateProfile, signOut } from 'firebase/auth';
 import { doc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { LogOut, User, Save } from 'lucide-react';
+import { LogOut, User, Save, Sun, Moon, Palette } from 'lucide-react';
 
-export default function Settings({ user, dbUser }) {
+export default function Settings({ user, dbUser, theme, setTheme }) {
   const [newName, setNewName] = useState(user.displayName || '');
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -36,6 +36,10 @@ export default function Settings({ user, dbUser }) {
     }
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
     <div className="settings-container">
       <div className="composer-card glass-panel">
@@ -59,6 +63,24 @@ export default function Settings({ user, dbUser }) {
             {isUpdating ? "Đang lưu..." : <><Save size={18} /> Lưu thay đổi</>}
           </button>
         </form>
+
+        <div className="menu-divider" style={{ margin: '32px 0' }}></div>
+
+        <div className="theme-section">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+            <Palette size={20} color="#818cf8" />
+            <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Giao diện</h3>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '16px', borderRadius: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} color="#f59e0b" />}
+              <span>Chế độ {theme === 'dark' ? 'Tối' : 'Sáng'}</span>
+            </div>
+            <button onClick={toggleTheme} className="glass-btn secondary small-btn" style={{ minWidth: '100px' }}>
+              Chuyển sang {theme === 'dark' ? 'Sáng' : 'Tối'}
+            </button>
+          </div>
+        </div>
 
         <div className="menu-divider" style={{ margin: '32px 0' }}></div>
 
