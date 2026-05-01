@@ -471,18 +471,63 @@ body {
 }
 
 /* Responsive Media Queries */
+
+/* TABLET: Hide right sidebar */
 @media (max-width: 1200px) {
   .right-sidebar {
-    display: none;
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    border: none !important;
   }
 }
 
+/* MOBILE: Hide left sidebar, show bottom nav */
 @media (max-width: 900px) {
   .left-sidebar {
-    display: none;
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+  .right-sidebar {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    border: none !important;
   }
   .main-feed {
     padding-bottom: 80px;
+    width: 100% !important;
+  }
+  .layout-wrapper {
+    flex-direction: column;
+  }
+  /* Force desktop-only elements hidden */
+  .desktop-only,
+  aside.sidebar.desktop-only,
+  .sidebar.left-sidebar,
+  .sidebar.right-sidebar {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    pointer-events: none !important;
+  }
+}
+
+/* Desktop: hide mobile elements */
+@media (min-width: 901px) {
+  .mobile-only {
+    display: none !important;
   }
 }
 
@@ -539,18 +584,6 @@ body {
   
   .profile-info-section h2 {
     font-size: 1.5rem;
-  }
-}
-
-@media (min-width: 901px) {
-  .mobile-only {
-    display: none !important;
-  }
-}
-
-@media (max-width: 900px) {
-  .desktop-only {
-    display: none !important;
   }
 }
 
