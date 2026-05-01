@@ -116,8 +116,23 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
     }
   };
 
+  const toggleCreatorMode = async () => {
+    if (!isMyProfile) return;
+    setIsSaving(true);
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      const newState = !profileData?.creatorModeEnabled;
+      await updateDoc(userRef, { creatorModeEnabled: newState });
+      setProfileData(prev => ({ ...prev, creatorModeEnabled: newState }));
+      alert(newState ? "Đã bật chế độ Nhà sáng tạo!" : "Đã tắt chế độ Nhà sáng tạo.");
+    } catch (error) {
+      console.error("Error toggling creator mode:", error);
+    }
+    setIsSaving(false);
+  };
+
   const claimCreatorReward = async () => {
-    if (!isMyProfile || (profileData?.followers?.length || 0) < 10) return;
+    if (!isMyProfile || (profileData?.followers?.length || 0) < 10 || !profileData?.creatorModeEnabled) return;
     setIsSaving(true);
     try {
       const userRef = doc(db, 'users', currentUser.uid);
@@ -308,15 +323,29 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
             )}
           </div>
 
-          {isMyProfile && (profileData?.followers?.length || 0) >= 10 && !profileData?.isCreator && (
+          {isMyProfile && (
+            <div className="glass-panel" style={{ margin: '16px 24px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: profileData?.creatorModeEnabled ? '1px solid #10b981' : '1px solid var(--border)' }}>
+              <div>
+                <h4 style={{ margin: 0 }}>Chế độ Nhà sáng tạo</h4>
+                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  {profileData?.creatorModeEnabled ? 'Đang hoạt động - Bạn có thể kiếm tiền từ followers' : 'Tắt - Hãy bật để bắt đầu kiếm tiền'}
+                </p>
+              </div>
+              <button className={`glass-btn ${profileData?.creatorModeEnabled ? 'secondary' : 'primary'}`} onClick={toggleCreatorMode}>
+                {profileData?.creatorModeEnabled ? 'Tắt' : 'Bật kiếm tiền'}
+              </button>
+            </div>
+          )}
+
+          {isMyProfile && profileData?.creatorModeEnabled && (profileData?.followers?.length || 0) >= 10 && !profileData?.isCreator && (
             <div className="glass-panel" style={{ margin: '16px 24px', padding: '16px', background: 'linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,165,0,0.1))', border: '1px solid gold' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ background: 'gold', padding: '8px', borderRadius: '50%', color: '#000' }}>
                   <DollarSign size={24} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: 0 }}>Chương trình Nhà sáng tạo</h4>
-                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>Bạn đủ điều kiện nhận thưởng vì có từ 10 người theo dõi!</p>
+                  <h4 style={{ margin: 0 }}>Phần thưởng cột mốc!</h4>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>Bạn đã đạt 10 followers. Hãy nhận ngay phần thưởng khởi đầu!</p>
                 </div>
                 <button className="glass-btn primary" onClick={claimCreatorReward} disabled={isSaving}>
                   Nhận 100k
