@@ -198,73 +198,75 @@ export default function Feed({ user, dbUser, profileUserId, onProfileClick }) {
 
   return (
     <div className="feed-container">
-      <div className="composer-card glass-panel">
-        <div className="composer-header">
-          <img src={user.photoURL || "https://via.placeholder.com/40"} alt="User" className="avatar" />
-          <h3 style={{margin: 0}}>What's on your mind, {user.displayName?.split(' ')[0]}?</h3>
-        </div>
-        <form onSubmit={handleCreatePost}>
-          <textarea 
-            className="glass-input" 
-            placeholder="Type your post here..." 
-            rows="3"
-            value={newPostContent}
-            onChange={(e) => setNewPostContent(e.target.value)}
-            disabled={isUploading}
-          />
-          
-          {mediaPreview && (
-            <div className="media-preview-container">
-              <button type="button" onClick={removeMedia} className="remove-media-btn">
-                <X size={16} />
-              </button>
-              {mediaFile?.type.startsWith('video/') ? (
-                <video src={mediaPreview} controls className="media-preview" />
-              ) : (
-                <img src={mediaPreview} alt="Preview" className="media-preview" />
-              )}
-            </div>
-          )}
-
-          {isUploading && uploadProgress > 0 && (
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${uploadProgress}%` }}></div>
-            </div>
-          )}
-
-          <div className="composer-actions-row">
-            <div className="composer-tools">
-              <label className="action-btn">
-                <Image size={20} color="#34d399" />
-                <span>Photo</span>
-                <input type="file" accept="image/*" onChange={handleMediaChange} hidden disabled={isUploading}/>
-              </label>
-              <label className="action-btn">
-                <Video size={20} color="#60a5fa" />
-                <span>Video</span>
-                <input type="file" accept="video/*" onChange={handleMediaChange} hidden disabled={isUploading}/>
-              </label>
-              
-              <div className="privacy-selector">
-                <select 
-                  value={privacy} 
-                  onChange={(e) => setPrivacy(e.target.value)}
-                  className="glass-select"
-                  disabled={isUploading}
-                >
-                  <option value="public">🌍 Public</option>
-                  <option value="friends">👥 Friends</option>
-                  <option value="private">🔒 Only Me</option>
-                </select>
-              </div>
-            </div>
-
-            <button type="submit" className="glass-btn" disabled={(!newPostContent.trim() && !mediaFile) || isUploading}>
-              {isUploading ? 'Posting...' : 'Post'}
-            </button>
+      {!profileUserId && (
+        <div className="composer-card glass-panel">
+          <div className="composer-header">
+            <img src={user.photoURL || "https://via.placeholder.com/40"} alt="User" className="avatar" />
+            <h3 style={{margin: 0}}>What's on your mind, {user.displayName?.split(' ')[0]}?</h3>
           </div>
-        </form>
-      </div>
+          <form onSubmit={handleCreatePost}>
+            <textarea 
+              className="glass-input" 
+              placeholder="Type your post here..." 
+              rows="3"
+              value={newPostContent}
+              onChange={(e) => setNewPostContent(e.target.value)}
+              disabled={isUploading}
+            />
+            
+            {mediaPreview && (
+              <div className="media-preview-container">
+                <button type="button" onClick={removeMedia} className="remove-media-btn">
+                  <X size={16} />
+                </button>
+                {mediaFile?.type.startsWith('video/') ? (
+                  <video src={mediaPreview} controls className="media-preview" />
+                ) : (
+                  <img src={mediaPreview} alt="Preview" className="media-preview" />
+                )}
+              </div>
+            )}
+
+            {isUploading && uploadProgress > 0 && (
+              <div className="progress-bar">
+                <div className="progress-fill" style={{ width: `${uploadProgress}%` }}></div>
+              </div>
+            )}
+
+            <div className="composer-actions-row">
+              <div className="composer-tools">
+                <label className="action-btn">
+                  <Image size={20} color="#34d399" />
+                  <span>Photo</span>
+                  <input type="file" accept="image/*" onChange={handleMediaChange} hidden disabled={isUploading}/>
+                </label>
+                <label className="action-btn">
+                  <Video size={20} color="#60a5fa" />
+                  <span>Video</span>
+                  <input type="file" accept="video/*" onChange={handleMediaChange} hidden disabled={isUploading}/>
+                </label>
+                
+                <div className="privacy-selector">
+                  <select 
+                    value={privacy} 
+                    onChange={(e) => setPrivacy(e.target.value)}
+                    className="glass-select"
+                    disabled={isUploading}
+                  >
+                    <option value="public">🌍 Public</option>
+                    <option value="friends">👥 Friends</option>
+                    <option value="private">🔒 Only Me</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" className="glass-btn" disabled={(!newPostContent.trim() && !mediaFile) || isUploading}>
+                {isUploading ? 'Posting...' : 'Post'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <div className="posts-list">
         {posts.map(post => (
@@ -278,7 +280,7 @@ export default function Feed({ user, dbUser, profileUserId, onProfileClick }) {
         ))}
         {posts.length === 0 && (
           <div className="empty-state">
-            <p>No posts to show. Share something!</p>
+            <p>Chưa có bài viết nào</p>
           </div>
         )}
       </div>
