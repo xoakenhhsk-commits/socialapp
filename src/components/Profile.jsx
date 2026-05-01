@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../firebase';
 import Feed from './Feed';
-import { UserPlus, UserCheck, MessageSquare, MapPin, Calendar, Briefcase, Camera, Check, X, Loader2 } from 'lucide-react';
+import { UserPlus, UserCheck, MessageSquare, MapPin, Calendar, Briefcase, Camera, Check, X, Loader2, DollarSign, Users } from 'lucide-react';
 
 export default function Profile({ userId, currentUser, dbUser, onProfileClick }) {
   const [profileData, setProfileData] = useState(null);
@@ -95,6 +95,42 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
       setIsEditing(false);
     } catch (error) {
       console.error("Error saving profile:", error);
+    }
+    setIsSaving(false);
+  };
+
+  const handleFollow = async () => {
+    if (!currentUser || isMyProfile) return;
+    const isFollowing = profileData?.followers?.includes(currentUser.uid);
+    try {
+      const targetUserRef = doc(db, 'users', userId);
+      if (isFollowing) {
+        await updateDoc(targetUserRef, { followers: arrayRemove(currentUser.uid) });
+        setProfileData(prev => ({ ...prev, followers: prev.followers.filter(id => id !== currentUser.uid) }));
+      } else {
+        await updateDoc(targetUserRef, { followers: arrayUnion(currentUser.uid) });
+        setProfileData(prev => ({ ...prev, followers: [...(prev.followers || []), currentUser.uid] }));
+      }
+    } catch (error) {
+      console.error("Error following user:", error);
+    }
+  };
+
+  const claimCreatorReward = async () => {
+    if (!isMyProfile || (profileData?.followers?.length || 0) < 10) return;
+    setIsSaving(true);
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      const newBalance = (profileData.balance || 0) + 100000; // Reward 100k VND
+      await updateDoc(userRef, { 
+        balance: newBalance,
+        isCreator: true,
+        lastRewardClaimed: new Date()
+      });
+      setProfileData(prev => ({ ...prev, balance: newBalance, isCreator: true }));
+      alert("Chúc mừng! Bạn đã nhận được 100,000 VND từ chương trình Nhà sáng tạo!");
+    } catch (error) {
+      console.error("Error claiming reward:", error);
     }
     setIsSaving(false);
   };
@@ -214,23 +250,28 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
           </div>
           
           <div className="profile-actions">
-            {!isMyProfile && (
-              <>
+            {!isMyProfile ? (
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button 
+                  className={`glass-btn ${profileData?.followers?.includes(currentUser.uid) ? 'secondary' : 'primary'}`} 
+                  onClick={handleFollow}
+                >
+                  {profileData?.followers?.includes(currentUser.uid) ? 'Đang theo dõi' : 'Theo dõi'}
+                </button>
                 <button 
                   onClick={handleFriendAction} 
                   className={`glass-btn ${isFriend ? 'secondary' : 'primary'}`}
                 >
                   {isFriend ? <><UserCheck size={18} /> Bạn bè</> : 
                    isRequestSent ? "Đã gửi lời mời" :
-                   isRequestReceived ? "Chấp nhận kết bạn" :
-                   <><UserPlus size={18} /> Thêm bạn bè</>}
+                   isRequestReceived ? "Chấp nhận" :
+                   <><UserPlus size={18} /> Kết bạn</>}
                 </button>
-                <button className="glass-btn secondary">
+                <button className="glass-btn secondary" onClick={() => onProfileClick('chat', userId)}>
                   <MessageSquare size={18} /> Nhắn tin
                 </button>
-              </>
-            )}
-            {isMyProfile && (
+              </div>
+            ) : (
               isEditing ? (
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button className="glass-btn primary" onClick={handleSaveProfile} disabled={isSaving}>
@@ -247,6 +288,42 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
               )
             )}
           </div>
+
+          <div style={{ display: 'flex', gap: '24px', padding: '16px 24px', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', marginTop: '16px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontWeight: '800', fontSize: '1.2rem' }}>{profileData?.followers?.length || 0}</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Người theo dõi</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontWeight: '800', fontSize: '1.2rem' }}>{profileData?.friends?.length || 0}</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Bạn bè</div>
+            </div>
+            {isMyProfile && (
+              <div style={{ textAlign: 'center', marginLeft: 'auto' }}>
+                <div style={{ fontWeight: '800', fontSize: '1.2rem', color: '#10b981' }}>
+                  {(profileData?.balance || 0).toLocaleString()}đ
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Số dư</div>
+              </div>
+            )}
+          </div>
+
+          {isMyProfile && (profileData?.followers?.length || 0) >= 10 && !profileData?.isCreator && (
+            <div className="glass-panel" style={{ margin: '16px 24px', padding: '16px', background: 'linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,165,0,0.1))', border: '1px solid gold' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ background: 'gold', padding: '8px', borderRadius: '50%', color: '#000' }}>
+                  <DollarSign size={24} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: 0 }}>Chương trình Nhà sáng tạo</h4>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>Bạn đủ điều kiện nhận thưởng vì có từ 10 người theo dõi!</p>
+                </div>
+                <button className="glass-btn primary" onClick={claimCreatorReward} disabled={isSaving}>
+                  Nhận 100k
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
