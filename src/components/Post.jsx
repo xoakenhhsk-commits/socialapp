@@ -207,8 +207,7 @@ export default function Post({ post, currentUser, dbUser, onProfileClick }) {
                 <iframe
                   src={`${post.mediaUrl}${post.mediaUrl.includes('?') ? '&' : '?'}queue-enable=0&queue-autoplay-next=0&sharing-enable=0&ui-logo=0&ui-start-screen-info=0`}
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowFullScreen
+                  allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; web-share"
                   title="Dailymotion Video"
                 />
               </div>
