@@ -78,6 +78,22 @@ export default function Chat({ user, dbUser }) {
     fetchFriends();
   }, [dbUser]);
 
+  // Mark as read when active chat changes
+  useEffect(() => {
+    if (activeChat && user) {
+      const markAsRead = async () => {
+        try {
+          await updateDoc(doc(db, 'conversations', activeChat.id), {
+            readBy: arrayUnion(user.uid)
+          });
+        } catch (error) {
+          console.error("Error marking as read:", error);
+        }
+      };
+      markAsRead();
+    }
+  }, [activeChat, user]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -90,6 +106,7 @@ export default function Chat({ user, dbUser }) {
     setNewMessage('');
 
     try {
+      const convoRef = doc(db, 'conversations', activeChat.id);
       await addDoc(collection(db, `conversations/${activeChat.id}/messages`), {
         text: msg,
         senderId: user.uid,
@@ -97,9 +114,10 @@ export default function Chat({ user, dbUser }) {
         timestamp: serverTimestamp()
       });
 
-      await updateDoc(doc(db, 'conversations', activeChat.id), {
+      await updateDoc(convoRef, {
         lastMessage: msg,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        readBy: [user.uid] // Reset read status for others
       });
     } catch (error) {
       console.error("Error sending message:", error);
@@ -107,7 +125,6 @@ export default function Chat({ user, dbUser }) {
   };
 
   const createDirectChat = async (friend) => {
-    // Check if direct chat already exists
     const existing = conversations.find(c => 
       !c.isGroup && c.participants.includes(friend.uid)
     );
@@ -125,6 +142,7 @@ export default function Chat({ user, dbUser }) {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         lastMessage: '',
+        readBy: [user.uid],
         participantDetails: {
           [user.uid]: { name: user.displayName, photo: user.photoURL },
           [friend.uid]: { name: friend.displayName, photo: friend.photoURL }
@@ -152,11 +170,12 @@ export default function Chat({ user, dbUser }) {
         }
       });
 
-      const docRef = await addDoc(collection(db, 'conversations'), {
+      await addDoc(collection(db, 'conversations'), {
         name: groupName,
         isGroup: true,
         participants,
         participantDetails,
+        readBy: [user.uid],
         adminId: user.uid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -166,7 +185,6 @@ export default function Chat({ user, dbUser }) {
       setShowCreateGroup(false);
       setGroupName('');
       setSelectedFriends([]);
-      // Selection will happen via onSnapshot
     } catch (error) {
       console.error("Error creating group:", error);
     }
@@ -185,20 +203,26 @@ export default function Chat({ user, dbUser }) {
   };
 
   const getChatPhoto = (convo) => {
-    if (convo.isGroup) return null; // Use icon
+    if (convo.isGroup) return null;
     const otherId = convo.participants.find(id => id !== user.uid);
     return convo.participantDetails?.[otherId]?.photo;
   };
 
   return (
-    <div className="chat-container glass">
+    <div className="chat-container">
       {/* Sidebar */}
       <div className={`chat-sidebar ${isSidebarActive ? 'active' : ''}`}>
-        <div className="chat-sidebar-header">
-          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800' }}>Đoạn chat</h2>
-          <button className="glass-btn small-btn" onClick={() => setShowCreateGroup(true)} style={{ borderRadius: '50%', width: '36px', height: '36px', padding: 0 }}>
-            <Plus size={20} />
-          </button>
+        <div className="chat-sidebar-header" style={{ paddingBottom: '12px' }}>
+          <h2 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '800' }}>messenger</h2>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="glass-btn small-btn" onClick={() => setShowCreateGroup(true)} style={{ borderRadius: '50%', width: '36px', height: '36px', padding: 0, background: '#f3f4f6', color: '#050505', border: 'none' }}>
+              <Plus size={20} />
+            </button>
+          </div>
+        </div>
+
+        <div className="chat-search-container">
+          <input type="text" className="chat-search" placeholder="Ask Meta AI or Search" />
         </div>
 
         {/* Messenger-like Active Bar */}
@@ -206,60 +230,59 @@ export default function Chat({ user, dbUser }) {
           <div className="active-bar">
             <div className="active-user-item">
               <div style={{ position: 'relative' }}>
-                <img src={user.photoURL} alt="" className="avatar-small" />
-                <div className="online-status"></div>
+                <img src={user.photoURL} alt="" className="active-avatar-large" style={{ opacity: 0.6 }} />
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '0.7rem', textAlign: 'center' }}>
+                  Post a note
+                </div>
               </div>
-              <span>Ghi chú</span>
+              <span style={{ fontSize: '0.75rem', marginTop: '4px', textAlign: 'center' }}>Create note</span>
             </div>
             {friendsList.map(f => (
               <div key={f.uid} className="active-user-item" onClick={() => createDirectChat(f)} style={{ cursor: 'pointer' }}>
                 <div style={{ position: 'relative' }}>
-                  <img src={f.photoURL} alt="" className="avatar-small" />
+                  <img src={f.photoURL} alt="" className="active-avatar-large" />
                   <div className="online-status"></div>
                 </div>
-                <span>{f.displayName.split(' ').pop()}</span>
+                <span style={{ fontSize: '0.75rem', marginTop: '4px', textAlign: 'center' }}>{f.displayName.split(' ')[0]}</span>
               </div>
             ))}
           </div>
         )}
         
         <div className="chat-list">
-          {conversations.length === 0 && (
-            <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
-              <MessageSquare size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
-              <p>Chưa có cuộc trò chuyện nào.</p>
-            </div>
-          )}
-          {conversations.map(convo => (
-            <div 
-              key={convo.id} 
-              className={`chat-item ${activeChat?.id === convo.id ? 'active' : ''}`}
-              onClick={() => { setActiveChat(convo); setIsSidebarActive(false); }}
-            >
-              <div style={{ position: 'relative' }}>
-                {convo.isGroup ? (
-                  <div className="avatar-small" style={{ background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#050505' }}>
-                    <Users size={20} />
-                  </div>
-                ) : (
-                  <>
-                    <img src={getChatPhoto(convo)} alt="" className="avatar-small" />
-                    <div className="online-status"></div>
-                  </>
-                )}
-              </div>
-              <div className="chat-item-info">
-                <div className="chat-item-name">
-                  {getChatName(convo)}
+          {conversations.map(convo => {
+            const isUnread = !convo.readBy?.includes(user.uid);
+            return (
+              <div 
+                key={convo.id} 
+                className={`chat-item ${activeChat?.id === convo.id ? 'active' : ''} ${isUnread ? 'unread' : ''}`}
+                onClick={() => { setActiveChat(convo); setIsSidebarActive(false); }}
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', cursor: 'pointer' }}
+              >
+                <div style={{ position: 'relative' }}>
+                  {convo.isGroup ? (
+                    <div className="avatar-small" style={{ background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#050505' }}>
+                      <Users size={20} />
+                    </div>
+                  ) : (
+                    <>
+                      <img src={getChatPhoto(convo)} alt="" className="avatar-small" />
+                      <div className="online-status"></div>
+                    </>
+                  )}
                 </div>
-                <p className="chat-item-last-msg">
-                  {convo.lastMessage || (convo.isGroup ? "Nhóm mới" : "Bắt đầu trò chuyện")}
-                </p>
+                <div className="chat-item-info">
+                  <div className="chat-item-text">
+                    <div className="chat-item-name">{getChatName(convo)}</div>
+                    <p className="chat-item-last-msg" style={{ margin: 0, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {convo.lastMessage || "Bắt đầu trò chuyện"}
+                    </p>
+                  </div>
+                  {isUnread && <div className="unread-dot"></div>}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-
+            );
+          })}
         </div>
       </div>
 
