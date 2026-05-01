@@ -1,12 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../firebase';
 import Feed from './Feed';
-import { UserPlus, UserCheck, MessageSquare, MapPin, Calendar, Briefcase, Camera } from 'lucide-react';
+import { UserPlus, UserCheck, MessageSquare, MapPin, Calendar, Briefcase, Camera, Check, X, Loader2 } from 'lucide-react';
 
 export default function Profile({ userId, currentUser, dbUser, onProfileClick }) {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const avatarInputRef = useRef(null);
+  const coverInputRef = useRef(null);
 
   const isMyProfile = userId === currentUser.uid;
   const isFriend = dbUser?.friends?.includes(userId);
@@ -19,7 +26,10 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
       try {
         const docSnap = await getDoc(doc(db, 'users', userId));
         if (docSnap.exists()) {
-          setProfileData(docSnap.data());
+          const data = docSnap.data();
+          setProfileData(data);
+          setEditName(data.displayName || '');
+          setEditBio(data.bio || '');
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -30,6 +40,65 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
     fetchProfile();
   }, [userId]);
 
+  const uploadImage = async (file) => {
+    const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
+    if (!apiKey) {
+      alert("Lỗi: Thiếu VITE_IMGBB_API_KEY!");
+      return null;
+    }
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await response.json();
+      return data.success ? data.data.url : null;
+    } catch (error) {
+      console.error("Upload error:", error);
+      return null;
+    }
+  };
+
+  const handleImageChange = async (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsSaving(true);
+    const imageUrl = await uploadImage(file);
+    
+    if (imageUrl) {
+      try {
+        const userRef = doc(db, 'users', currentUser.uid);
+        const updateData = type === 'avatar' ? { photoURL: imageUrl } : { coverURL: imageUrl };
+        await updateDoc(userRef, updateData);
+        setProfileData(prev => ({ ...prev, ...updateData }));
+      } catch (error) {
+        console.error("Error updating image:", error);
+      }
+    }
+    setIsSaving(false);
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userRef, {
+        displayName: editName,
+        bio: editBio
+      });
+      setProfileData(prev => ({ ...prev, displayName: editName, bio: editBio }));
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+    }
+    setIsSaving(false);
+  };
+
   const handleFriendAction = async () => {
     if (isMyProfile) return;
     try {
@@ -37,7 +106,6 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
       const currentUserRef = doc(db, 'users', currentUser.uid);
       
       if (isRequestReceived) {
-        // Accept request
         await updateDoc(currentUserRef, {
           friends: arrayUnion(userId),
           friendRequestsReceived: arrayRemove(userId)
@@ -47,7 +115,6 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
           friendRequestsSent: arrayRemove(currentUser.uid)
         });
       } else if (!isFriend && !isRequestSent) {
-        // Send request
         await updateDoc(otherUserRef, {
           friendRequestsReceived: arrayUnion(currentUser.uid)
         });
@@ -78,9 +145,22 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
             <div className="cover-placeholder"></div>
           )}
           {isMyProfile && (
-            <button className="edit-cover-btn glass-btn small-btn">
-              <Camera size={16} /> Chỉnh sửa ảnh bìa
-            </button>
+            <>
+              <input 
+                type="file" 
+                accept="image/*" 
+                hidden 
+                ref={coverInputRef} 
+                onChange={(e) => handleImageChange(e, 'cover')} 
+              />
+              <button 
+                className="edit-cover-btn glass-btn small-btn"
+                onClick={() => coverInputRef.current.click()}
+                disabled={isSaving}
+              >
+                {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Camera size={16} />} Chỉnh sửa ảnh bìa
+              </button>
+            </>
           )}
         </div>
         
@@ -88,15 +168,49 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
           <div className="profile-avatar-wrapper">
             <img src={profileData.photoURL} alt={profileData.displayName} className="profile-avatar-large" />
             {isMyProfile && (
-              <button className="edit-avatar-btn">
-                <Camera size={20} />
-              </button>
+              <>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  hidden 
+                  ref={avatarInputRef} 
+                  onChange={(e) => handleImageChange(e, 'avatar')} 
+                />
+                <button 
+                  className="edit-avatar-btn"
+                  onClick={() => avatarInputRef.current.click()}
+                  disabled={isSaving}
+                >
+                  {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Camera size={20} />}
+                </button>
+              </>
             )}
           </div>
           
           <div className="profile-name-bio">
-            <h1 className="profile-real-name">{profileData.displayName}</h1>
-            <p className="profile-bio-text">{profileData.bio || "Chưa có tiểu sử"}</p>
+            {isEditing ? (
+              <>
+                <input 
+                  type="text" 
+                  className="edit-name-input" 
+                  value={editName} 
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Họ và tên"
+                />
+                <textarea 
+                  className="edit-bio-textarea" 
+                  value={editBio} 
+                  onChange={(e) => setEditBio(e.target.value)}
+                  placeholder="Thêm tiểu sử"
+                  rows="2"
+                />
+              </>
+            ) : (
+              <>
+                <h1 className="profile-real-name">{profileData.displayName}</h1>
+                <p className="profile-bio-text">{profileData.bio || "Chưa có tiểu sử"}</p>
+              </>
+            )}
           </div>
           
           <div className="profile-actions">
@@ -117,9 +231,20 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
               </>
             )}
             {isMyProfile && (
-              <button className="glass-btn secondary">
-                Chỉnh sửa trang cá nhân
-              </button>
+              isEditing ? (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button className="glass-btn primary" onClick={handleSaveProfile} disabled={isSaving}>
+                    <Check size={18} /> Lưu thay đổi
+                  </button>
+                  <button className="glass-btn secondary" onClick={() => { setIsEditing(false); setEditName(profileData.displayName); setEditBio(profileData.bio); }}>
+                    <X size={18} /> Hủy
+                  </button>
+                </div>
+              ) : (
+                <button className="glass-btn secondary" onClick={() => setIsEditing(true)}>
+                  Chỉnh sửa trang cá nhân
+                </button>
+              )
             )}
           </div>
         </div>
@@ -146,7 +271,6 @@ export default function Profile({ userId, currentUser, dbUser, onProfileClick })
           <div className="profile-friends-card glass">
             <h3 className="intro-title">Bạn bè</h3>
             <p style={{color: 'rgba(255,255,255,0.6)'}}>{profileData.friends?.length || 0} người bạn</p>
-            {/* Friends grid could go here */}
           </div>
         </aside>
 

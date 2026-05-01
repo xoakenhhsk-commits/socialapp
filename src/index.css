@@ -637,17 +637,28 @@ body {
 }
 
 .profile-avatar-large {
-  width: 150px;
-  height: 150px;
-  border: 5px solid #0f172a;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-  transition: all 0.3s ease;
+  width: 168px;
+  height: 168px;
+  border: 4px solid #1e293b;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   object-fit: cover;
   border-radius: 50%;
+  background: #0f172a;
+}
+
+.profile-avatar-large:hover {
+  transform: scale(1.02);
+  border-color: var(--primary);
 }
 
 .profile-info-section {
-  padding: 0 40px 30px;
+  padding: 0 40px 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
 }
 
 .profile-layout {
@@ -694,17 +705,49 @@ body {
 
 .profile-name-bio {
   text-align: center;
-  margin-bottom: 20px;
+  margin: 16px 0;
+  width: 100%;
 }
 
 .profile-real-name {
-  margin: 0 0 8px;
+  margin: 0 0 4px;
   font-size: 2rem;
+  font-weight: 800;
+  color: #f8fafc;
 }
 
 .profile-bio-text {
   color: #94a3b8;
   margin: 0;
+  font-size: 1.05rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.edit-bio-textarea {
+  width: 100%;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  color: white;
+  font-family: inherit;
+  resize: none;
+  margin-top: 8px;
+}
+
+.edit-name-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 8px;
 }
 
 .profile-actions {
@@ -1319,7 +1362,8 @@ body {
 .profile-avatar-wrapper {
   position: relative;
   display: inline-block;
-  margin-top: -75px;
+  margin-top: -84px;
+  z-index: 2;
 }
 
 .edit-avatar-btn {
@@ -1345,17 +1389,9 @@ body {
 
 .profile-header-card {
   overflow: hidden;
-}
-
-.profile-header-card .profile-cover {
-  position: relative;
-  border-radius: 0;
-}
-
-.profile-header-card .profile-info-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  border-radius: 0 0 16px 16px;
+  margin-top: -32px;
+  margin-bottom: 24px;
 }
 
 /* =============================================
