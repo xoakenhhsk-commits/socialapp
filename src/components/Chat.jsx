@@ -195,17 +195,39 @@ export default function Chat({ user, dbUser }) {
       {/* Sidebar */}
       <div className={`chat-sidebar ${isSidebarActive ? 'active' : ''}`}>
         <div className="chat-sidebar-header">
-          <h2 style={{ margin: 0 }}>Tin nhắn</h2>
-          <button className="glass-btn small-btn" onClick={() => setShowCreateGroup(true)}>
+          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800' }}>Đoạn chat</h2>
+          <button className="glass-btn small-btn" onClick={() => setShowCreateGroup(true)} style={{ borderRadius: '50%', width: '36px', height: '36px', padding: 0 }}>
             <Plus size={20} />
           </button>
         </div>
+
+        {/* Messenger-like Active Bar */}
+        {friendsList.length > 0 && (
+          <div className="active-bar">
+            <div className="active-user-item">
+              <div style={{ position: 'relative' }}>
+                <img src={user.photoURL} alt="" className="avatar-small" />
+                <div className="online-status"></div>
+              </div>
+              <span>Ghi chú</span>
+            </div>
+            {friendsList.map(f => (
+              <div key={f.uid} className="active-user-item" onClick={() => createDirectChat(f)} style={{ cursor: 'pointer' }}>
+                <div style={{ position: 'relative' }}>
+                  <img src={f.photoURL} alt="" className="avatar-small" />
+                  <div className="online-status"></div>
+                </div>
+                <span>{f.displayName.split(' ').pop()}</span>
+              </div>
+            ))}
+          </div>
+        )}
         
         <div className="chat-list">
           {conversations.length === 0 && (
             <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
               <MessageSquare size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
-              <p>Chưa có cuộc trò chuyện nào. Hãy kết bạn để bắt đầu chat!</p>
+              <p>Chưa có cuộc trò chuyện nào.</p>
             </div>
           )}
           {conversations.map(convo => (
@@ -216,42 +238,29 @@ export default function Chat({ user, dbUser }) {
             >
               <div style={{ position: 'relative' }}>
                 {convo.isGroup ? (
-                  <div className="avatar-small" style={{ background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                    <Users size={18} />
+                  <div className="avatar-small" style={{ background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#050505' }}>
+                    <Users size={20} />
                   </div>
                 ) : (
-                  <img src={getChatPhoto(convo)} alt="" className="avatar-small" />
+                  <>
+                    <img src={getChatPhoto(convo)} alt="" className="avatar-small" />
+                    <div className="online-status"></div>
+                  </>
                 )}
               </div>
               <div className="chat-item-info">
-                <span className="chat-item-name">
+                <div className="chat-item-name">
                   {getChatName(convo)}
-                  {convo.isGroup && <span className="group-badge">Group</span>}
-                </span>
-                <p className="chat-item-last-msg">{convo.lastMessage}</p>
+                </div>
+                <p className="chat-item-last-msg">
+                  {convo.lastMessage || (convo.isGroup ? "Nhóm mới" : "Bắt đầu trò chuyện")}
+                </p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Start Chat with Friend List (Shortcut) */}
-        {friendsList.length > 0 && conversations.length < 5 && (
-          <div style={{ padding: '16px', borderTop: '1px solid var(--border)' }}>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Gợi ý bạn bè:</p>
-            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
-              {friendsList.map(f => (
-                <img 
-                  key={f.uid} 
-                  src={f.photoURL} 
-                  title={f.displayName} 
-                  className="avatar-small" 
-                  style={{ cursor: 'pointer', border: '2px solid transparent' }}
-                  onClick={() => createDirectChat(f)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Main Chat Area */}
@@ -259,25 +268,25 @@ export default function Chat({ user, dbUser }) {
         {activeChat ? (
           <>
             <div className="chat-header">
-              <button className="glass-btn small-btn" onClick={() => setIsSidebarActive(true)} style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <ChevronLeft size={20} /> <span>Quay lại</span>
+              <button className="glass-btn small-btn" onClick={() => setIsSidebarActive(true)} style={{ padding: '8px', border: 'none', background: 'none' }}>
+                <ChevronLeft size={24} color="#0084ff" />
               </button>
               {activeChat.isGroup ? (
-                <div className="avatar-small" style={{ background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                  <Users size={18} />
+                <div className="avatar-small" style={{ background: '#e4e6eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#050505' }}>
+                  <Users size={20} />
                 </div>
               ) : (
-                <img src={getChatPhoto(activeChat)} alt="" className="avatar-small" />
+                <div style={{ position: 'relative' }}>
+                  <img src={getChatPhoto(activeChat)} alt="" className="avatar-small" />
+                  <div className="online-status"></div>
+                </div>
               )}
               <div style={{ flex: 1 }}>
-                <h3 style={{ margin: 0, fontSize: '1rem' }}>{getChatName(activeChat)}</h3>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '600' }}>{getChatName(activeChat)}</h3>
                 <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                   {activeChat.isGroup ? `${activeChat.participants.length} thành viên` : 'Đang hoạt động'}
                 </p>
               </div>
-              <button className="glass-btn small-btn">
-                <MoreHorizontal size={20} />
-              </button>
             </div>
 
             <div className="messages-area">
