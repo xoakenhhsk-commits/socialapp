@@ -19,9 +19,14 @@
   --right-sidebar-width: 320px;
 }
 
+html {
+  min-width: 360px;
+}
+
 body {
   margin: 0;
   overflow-x: hidden;
+  min-width: 360px;
 }
 
 /* Glassmorphism Core */
@@ -204,15 +209,18 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16px;
-  padding-top: 16px;
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .composer-tools {
   display: flex;
-  gap: 16px;
+  gap: 6px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .action-btn {
@@ -221,12 +229,12 @@ body {
   color: #94a3b8;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 8px;
   transition: all 0.2s;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 
@@ -239,9 +247,9 @@ body {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #cbd5e1;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
   outline: none;
   transition: all 0.2s;
@@ -254,6 +262,12 @@ body {
 .glass-select option {
   background: #1e293b;
   color: #f8fafc;
+}
+
+.composer-actions-row .glass-btn {
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 /* Main Feed */
@@ -565,6 +579,29 @@ body {
     border-radius: 24px;
   }
 
+  .composer-actions-row {
+    gap: 6px;
+  }
+
+  .composer-tools {
+    gap: 4px;
+  }
+
+  .action-btn {
+    padding: 6px 8px;
+    gap: 4px;
+    font-size: 0.8rem;
+  }
+
+  .action-btn span {
+    display: none;
+  }
+
+  .glass-select {
+    padding: 6px 8px;
+    font-size: 0.8rem;
+  }
+
   /* Profile Responsive */
   .profile-cover {
     height: 200px;
@@ -584,6 +621,10 @@ body {
   
   .profile-info-section h2 {
     font-size: 1.5rem;
+  }
+
+  .profile-sidebar {
+    flex-direction: column;
   }
 }
 
@@ -611,16 +652,21 @@ body {
 
 .profile-layout {
   display: flex;
+  flex-direction: column;
   gap: 20px;
   margin-top: 20px;
   padding: 0 40px;
 }
 
 .profile-sidebar {
-  width: 320px;
+  width: 100%;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 16px;
+}
+
+.profile-sidebar > * {
+  flex: 1;
 }
 
 .profile-feed {
@@ -673,6 +719,7 @@ body {
     padding: 0 16px;
   }
   .profile-sidebar {
+    flex-direction: column;
     width: 100%;
   }
 }
