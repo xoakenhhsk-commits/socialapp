@@ -20,6 +20,7 @@ export default function Chat({ user, dbUser }) {
   const [selectedFriends, setSelectedFriends] = useState([]);
   const [friendsList, setFriendsList] = useState([]);
   const messagesEndRef = useRef(null);
+  const [showAddMember, setShowAddMember] = useState(false);
 
   // Fetch conversations
   useEffect(() => {
@@ -206,6 +207,24 @@ export default function Chat({ user, dbUser }) {
     }
   };
 
+  const handleAddMember = async (friend) => {
+    if (!activeChat || activeChat.participants.includes(friend.uid)) return;
+
+    try {
+      const convoRef = doc(db, 'conversations', activeChat.id);
+      await updateDoc(convoRef, {
+        participants: arrayUnion(friend.uid),
+        [`participantDetails.${friend.uid}`]: { name: friend.displayName, photo: friend.photoURL },
+        lastMessage: `${user.displayName} đã thêm ${friend.displayName} vào nhóm`,
+        updatedAt: serverTimestamp(),
+        readBy: [user.uid]
+      });
+      setShowAddMember(false);
+    } catch (error) {
+      console.error("Error adding member:", error);
+    }
+  };
+
   const toggleFriendSelection = (uid) => {
     setSelectedFriends(prev => 
       prev.includes(uid) ? prev.filter(id => id !== uid) : [...prev, uid]
@@ -231,8 +250,8 @@ export default function Chat({ user, dbUser }) {
         <div className="chat-sidebar-header" style={{ paddingBottom: '12px' }}>
           <h2 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '800' }}>messenger</h2>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button className="glass-btn small-btn" onClick={() => setShowCreateGroup(true)} style={{ borderRadius: '50%', width: '36px', height: '36px', padding: 0, background: '#f3f4f6', color: '#050505', border: 'none' }}>
-              <Plus size={20} />
+            <button className="create-group-icon-btn" onClick={() => setShowCreateGroup(true)}>
+              <Plus size={22} />
             </button>
           </div>
         </div>
@@ -326,6 +345,11 @@ export default function Chat({ user, dbUser }) {
                   {activeChat.isGroup ? `${activeChat.participants.length} thành viên` : 'Đang hoạt động'}
                 </p>
               </div>
+              {activeChat.isGroup && (
+                <button className="add-member-btn" onClick={() => setShowAddMember(true)}>
+                  <Plus size={16} /> <span className="desktop-only">Thêm</span>
+                </button>
+              )}
             </div>
 
             <div className="messages-area">
@@ -347,15 +371,18 @@ export default function Chat({ user, dbUser }) {
             </div>
 
             <form className="chat-input-area" onSubmit={sendMessage}>
+              <button type="button" className="send-btn" style={{ color: '#94a3b8' }}>
+                <Plus size={22} />
+              </button>
               <input 
                 type="text" 
-                className="glass-input chat-input" 
-                placeholder="Nhập tin nhắn..." 
+                className="chat-input" 
+                placeholder="Aa" 
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
               />
-              <button type="submit" className="glass-btn primary" style={{ borderRadius: '50%', width: '44px', height: '44px', padding: 0 }}>
-                <Send size={20} />
+              <button type="submit" className="send-btn">
+                <Send size={22} />
               </button>
             </form>
           </>
@@ -418,6 +445,27 @@ export default function Chat({ user, dbUser }) {
                 Hủy
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Add Member Modal */}
+      {showAddMember && (
+        <div className="modal-overlay" onClick={() => setShowAddMember(false)}>
+          <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+            <h2 style={{ marginTop: 0 }}>Thêm thành viên</h2>
+            <div className="friends-selection-list">
+              {friendsList.filter(f => !activeChat.participants.includes(f.uid)).map(f => (
+                <div key={f.uid} className="friend-select-item" onClick={() => handleAddMember(f)}>
+                  <img src={f.photoURL} alt="" className="avatar-small" />
+                  <span style={{ flex: 1 }}>{f.displayName}</span>
+                  <Plus size={18} color="#0084ff" />
+                </div>
+              ))}
+              {friendsList.filter(f => !activeChat.participants.includes(f.uid)).length === 0 && (
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Tất cả bạn bè đã ở trong nhóm này.</p>
+              )}
+            </div>
+            <button className="glass-btn secondary" style={{ width: '100%', marginTop: '12px' }} onClick={() => setShowAddMember(false)}>Đóng</button>
           </div>
         </div>
       )}

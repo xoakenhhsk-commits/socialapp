@@ -1747,19 +1747,67 @@ body {
 }
 
 .chat-input-area {
-  padding: 12px 16px;
+  padding: 10px 16px 20px; /* More padding at bottom for safe area, less at top */
   border-top: 1px solid var(--border);
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
-  background: var(--glass-heavy);
-  padding-bottom: env(safe-area-inset-bottom, 12px);
+  background: var(--bg-color);
 }
 
 .chat-input {
   flex: 1;
-  padding: 12px 16px !important;
-  border-radius: 24px !important;
+  padding: 10px 16px !important;
+  border-radius: 20px !important;
+  background: var(--input-bg) !important;
+  border: none !important;
+}
+
+.send-btn {
+  background: none;
+  border: none;
+  color: #0084ff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.send-btn:hover {
+  opacity: 0.8;
+}
+
+.add-member-btn {
+  background: rgba(0, 132, 255, 0.1);
+  color: #0084ff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.create-group-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #050505;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.create-group-icon-btn:hover {
+  background: #e4e6eb;
 }
 
 /* Group Modal */
