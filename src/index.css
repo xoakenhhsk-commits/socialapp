@@ -1507,3 +1507,243 @@ body {
     width: 200px;
   }
 }
+
+/* =============================================
+   CHAT SYSTEM
+   ============================================= */
+.chat-container {
+  display: flex;
+  height: calc(100vh - 60px);
+  background: var(--glass);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+@media (min-width: 901px) {
+  .chat-container {
+    height: 70vh;
+    margin: 0 auto;
+    max-width: 1000px;
+  }
+}
+
+.chat-sidebar {
+  width: 320px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .chat-sidebar {
+    width: 100%;
+    display: none;
+  }
+  .chat-sidebar.active {
+    display: flex;
+  }
+  .chat-main {
+    display: none;
+  }
+  .chat-main.active {
+    display: flex;
+    width: 100%;
+  }
+}
+
+.chat-sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.chat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+
+.chat-item:hover {
+  background: rgba(129, 140, 248, 0.1);
+}
+
+.chat-item.active {
+  background: rgba(59, 130, 246, 0.15);
+  border-left: 4px solid var(--primary);
+}
+
+.chat-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-item-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-main);
+}
+
+.chat-item-last-msg {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.chat-header {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--glass-heavy);
+}
+
+.messages-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message-bubble {
+  max-width: 75%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  position: relative;
+  word-wrap: break-word;
+}
+
+.message-sent {
+  align-self: flex-end;
+  background: var(--primary);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.message-received {
+  align-self: flex-start;
+  background: var(--glass-heavy);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
+.message-info {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  display: block;
+}
+
+.message-author {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: var(--primary);
+  display: block;
+}
+
+.chat-input-area {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--glass-heavy);
+}
+
+.chat-input {
+  flex: 1;
+  padding: 12px 16px !important;
+  border-radius: 24px !important;
+}
+
+/* Group Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 450px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.friends-selection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.friend-select-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.friend-select-item:hover {
+  background: rgba(129, 140, 248, 0.1);
+}
+
+.friend-select-item.selected {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: var(--primary);
+}
+
+.group-badge {
+  background: var(--primary);
+  color: white;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-left: 4px;
+}

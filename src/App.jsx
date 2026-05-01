@@ -7,7 +7,8 @@ import Feed from './components/Feed';
 import Profile from './components/Profile';
 import Settings from './components/Settings';
 import FindFriends from './components/FindFriends';
-import { Home, Users, Settings as SettingsIcon, LogOut } from 'lucide-react';
+import Chat from './components/Chat';
+import { Home, Users, Settings as SettingsIcon, LogOut, MessageSquare } from 'lucide-react';
 import './index.css';
 
 // Hook to detect screen width for responsive rendering
@@ -159,6 +160,9 @@ function App() {
                   <Users size={22} /> <span>Bạn bè</span>
                   {pendingRequestsCount > 0 && <span className="side-badge">{pendingRequestsCount}</span>}
                 </button>
+                <button className={`side-nav-btn ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => { setActiveTab('chat'); setTargetProfileId(null); }}>
+                  <MessageSquare size={22} /> <span>Tin nhắn</span>
+                </button>
                 <button className={`side-nav-btn ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => navigateToProfile(user.uid)}>
                   <img src={user.photoURL} alt="" className="avatar-mini" /> <span>Trang cá nhân</span>
                 </button>
@@ -200,6 +204,7 @@ function App() {
                 />
               )}
               {activeTab === 'friends' && <FindFriends user={user} dbUser={dbUser} onProfileClick={navigateToProfile} />}
+              {activeTab === 'chat' && <Chat user={user} dbUser={dbUser} />}
               {activeTab === 'settings' && <Settings user={user} dbUser={dbUser} theme={theme} setTheme={setTheme} />}
             </div>
           </main>
@@ -227,6 +232,9 @@ function App() {
               <button className={`nav-btn ${activeTab === 'friends' ? 'active' : ''}`} onClick={() => { setActiveTab('friends'); setTargetProfileId(null); }}>
                 <Users size={24} />
                 {pendingRequestsCount > 0 && <span className="notification-badge">{pendingRequestsCount}</span>}
+              </button>
+              <button className={`nav-btn ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => { setActiveTab('chat'); setTargetProfileId(null); }}>
+                <MessageSquare size={24} />
               </button>
               <button className={`nav-btn ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => navigateToProfile(user.uid)}>
                 <img src={user.photoURL} alt="" className="nav-avatar" />
